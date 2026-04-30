@@ -2,6 +2,7 @@
  * index.js - implement conditional package installation
  *
  * Copyright © 2023-2024 JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +18,12 @@
  * limitations under the License.
  */
 
-import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
-import Conditions from './Conditions.js';
-import NodeCompat from './NodeCompat.js';
+const { Conditions } = require('./Conditions.js');
+const { NodeCompat } = require('./NodeCompat.js');
 
 // Search the parents to find the main package.json that contains the name and version
 // number, and ignore any auxillary ones found on the way.
@@ -53,7 +54,7 @@ function findPkgJson() {
 }
 
 if (process.argv.length > 2 && process.argv[2].toLowerCase() === "--help") {
-    console.log("Usage: conditional-install [--help]");
+    console.log("Usage: resilient-conditional-install [--help]");
     console.log("Conditionally install js package dependencies.");
     console.log("See https://github.com/ilib-js/conditionalInstall for more details");
     process.exit(0);
@@ -68,16 +69,20 @@ try {
     }
 
     const nc = new NodeCompat();
-    nc.getVersionInfo().then(() => {
-        const conditions = new Conditions(pkg.conditionalDependencies, nc);
-        const packages = conditions.getInstallInstructions();
-        if (packages.length) {
-            const command = `npm install --no-save --ignore-scripts ${packages}`;
-            console.log(command);
-            execSync(command);
-        }
-    });
+    nc.getVersionInfo()
+        .catch(err => {
+            console.warn(`resilient-conditional-install: Failed to load compatibility data: ${err}`);
+        })
+        .then(() => {
+            const conditions = new Conditions(pkg.conditionalDependencies, nc);
+            const packages = conditions.getInstallInstructions();
+            if (packages.length) {
+                const command = `npm install --no-save --ignore-scripts ${packages}`;
+                console.log(command);
+                execSync(command);
+            }
+        });
 } catch (e) {
-    console.err("Could not read the package.json file." + e);
+    console.error("resilient-conditional-install failed: " + e);
     process.exit(1);
 }

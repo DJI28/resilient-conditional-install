@@ -2,6 +2,7 @@
  * ExpressionEvaluator.test.js - test the expression evaluator object
  *
  * Copyright © 2023, JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +18,9 @@
  * limitations under the License.
  */
 
-import ExpressionEvaluator from "../src/ExpressionEvaluator.js";
-import NodeCompat from "../src/NodeCompat.js";
-import fs from 'fs';
+const ExpressionEvaluator = require("../src/ExpressionEvaluator.js");
+const { NodeCompat } = require("../src/NodeCompat.js");
+const fs = require('fs');
 
 const nc = new NodeCompat();
 const compatConfig = JSON.parse(fs.readFileSync("./test/12.0.0.json", "utf-8"));

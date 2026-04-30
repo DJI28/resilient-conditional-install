@@ -2,6 +2,7 @@
  * NodeCompat.test.js - test the node compatibility checker object
  *
  * Copyright © 2023, JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +18,9 @@
  * limitations under the License.
  */
 
-import NodeCompat from "../src/NodeCompat.js";
-import fs from 'fs';
-import semver from 'semver';
+const { NodeCompat } = require("../src/NodeCompat.js");
+const fs = require('fs');
+const semver = require('semver');
 
 describe("testing the node compatibility check object", () => {
     test("that the constructor works okay", () => {
@@ -28,17 +29,33 @@ describe("testing the node compatibility check object", () => {
         expect(nc).toBeTruthy();
     });
 
-    test("make sure you can't call anything until it is initialized", () => {
+    test("make sure uninitialized compatibility checks return false", () => {
         expect.assertions(3);
 
         const nc = new NodeCompat();
         expect(nc.init).toBeFalsy();
-        expect(() => {
-            nc.supportsFeature("Iterator.prototype.map");
-        }).toThrow();
-        expect(() => {
-            nc.supportsEsVersion("ES2015")
-        }).toThrow();
+        expect(nc.supportsFeature("Iterator.prototype.map")).toBe(false);
+        expect(nc.supportsEsVersion("ES2015")).toBe(false);
+    });
+
+    test("falls back to nearest compatible Node version when exact data is missing", async () => {
+        expect.assertions(2);
+
+        const nc = new NodeCompat();
+        const result = await nc.getVersionInfo("30.0.0");
+
+        expect(result).toBe(true);
+        expect(nc.init).toBe(true);
+    });
+
+    test("returns false when no compatible Node data is available", async () => {
+        expect.assertions(2);
+
+        const nc = new NodeCompat();
+        const result = await nc.getVersionInfo("0.0.0");
+
+        expect(result).toBe(false);
+        expect(nc.init).toBe(false);
     });
 
     test("make sure it can load a local version of the compatibility data", () => {

@@ -2,6 +2,7 @@
  * ExpressionEvaluator.js - represent an expression
  *
  * Copyright © 2023 JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +18,10 @@
  * limitations under the License.
  */
 
-import { ExpressionParser } from 'expressionparser';
-import semver from 'semver';
+const { ExpressionParser } = require('expressionparser');
+const semver = require('semver');
 
-import tokenize from './Tokenizer.js';
+const tokenize = require('./Tokenizer.js');
 
 function booleanValue(node) {
     switch (node.type) {
@@ -283,4 +284,4 @@ class ExpressionEvaluator {
     }
 }
 
-export default ExpressionEvaluator;
+module.exports = ExpressionEvaluator;

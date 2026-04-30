@@ -3,6 +3,7 @@
  *
  * @license
  * Copyright © 2022, JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +43,8 @@ module.exports = function(grunt) {
                     '@babel/preset-env',
                     {
                         targets: {
-                            node: "10",
-                            browsers: "cover 99.5%"
+                            node: "8",
                         },
-                        "useBuiltIns": "usage",
-                        "corejs": 3
                     }
                 ]],
                 compact: !debug,

@@ -1,14 +1,25 @@
-# conditional-install
+# conditional-install (resilient fork)
+
+> ⚠️ **Unofficial fork** - not maintained by the original authors 
+This is an unofficial fork of the original [conditional-install](https://github.com/ilib-js/conditionalInstall)
+
+> ⚠️ This fork aims to be drop-in compatible but changes runtime behavior (no longer throws on missing compatibility data)
+
+### Improvements in this fork
+- Non-breaking NodeCompat (no crashes on missing compat data)
+- Fallback version probing for newer Node versions
+- Improved compatibility with older Node versions (Node 8+)
+- Reduced runtime dependencies by removing unnecessary polyfills
 
 A utility to install npm packages based on certain conditions.
- 
+
 Why?
 --------------------
 
 The original motivation for this package is to install the proper version of
 the jest unit testing library.
 
-Some of the ilib packages supported node 10 through the
+Some of the ilib packages supported node 8 through the
 current latest version and used jest as their unit testing library. The only
 problem is that the latest version of jest did not run on node 10 through 13
 because it was rewritten with ES6 syntax in jest@27.0.0. The tests, which were
@@ -206,6 +217,18 @@ limitations under the License.
 
 ## Release Notes
 
+### v1.1.0
+
+- non-breaking NodeCompat (no crashes on missing compat data, just assumes that the feature is not supported)
+- added fallback version probing for newer versions of node that may not have compat data yet
+- improved compatibility with older versions of node (Node 8+)
+- removed unnecessary `core-js` runtime dependency
+
+Why:
+- original version had compatibility issues with older Node versions due to ES module usage; this fork uses CommonJS
+- on newer versions of node where the compat data is not yet available, the original version would crash instead of trying to probe the version number and make a best effort to determine compatibility
+
+### Original Releases (from upstream)
 ### v1.0.3
 
 - update dependencies

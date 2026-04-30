@@ -2,6 +2,7 @@
  * Tokenizer.js - tokenize an expression string into an array of tokens
  *
  * Copyright © 2023 JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,4 +103,4 @@ function tokenize(str) {
     return tokens;
 }
 
-export default tokenize;
+module.exports = tokenize;

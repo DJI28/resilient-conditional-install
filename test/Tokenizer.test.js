@@ -2,6 +2,7 @@
  * Tokenizer.test.js - test the expression tokenizer
  *
  * Copyright © 2023, JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,7 @@
  * limitations under the License.
  */
 
-import Tokenizer from "../src/Tokenizer.js";
+const Tokenizer = require("../src/Tokenizer.js")
 
 describe("testing the expression tokenizer", () => {
     test("that a simple literal works", () => {

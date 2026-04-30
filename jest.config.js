@@ -18,11 +18,8 @@ if (semver.lte(process.versions.node, 'v16.0.0')) {
             presets: [[
                 '@babel/preset-env', {
                     "targets": {
-                        "node": "current",
-                        "browsers": "cover 99.5%"
+                        "node": "8",
                     },
-                    "useBuiltIns": "usage",
-                    "corejs": 3
                 }
             ]],
             compact: false,

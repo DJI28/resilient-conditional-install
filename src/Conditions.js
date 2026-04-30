@@ -2,6 +2,7 @@
  * Conditions.js - represent a conditional installation instruction
  *
  * Copyright © 2023 JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,7 @@
  * limitations under the License.
  */
 
-import ExpressionEvaluator from './ExpressionEvaluator.js';
+const ExpressionEvaluator = require('./ExpressionEvaluator.js');
 
 const specialChars = /[ \^\*~\-<>=]/;
 
@@ -35,13 +36,13 @@ class Conditions {
         for (let condition in this.conditions) {
             if (this.evaluator.evaluate(condition)) {
                 const installInstructions = this.conditions[condition];
-                instructions = instructions.concat(instructions, Object.keys(installInstructions).map(pkg => {
+                    Object.keys(installInstructions).forEach(pkg => {
                     let versionSpec = installInstructions[pkg];
                     if (versionSpec.match(specialChars)) {
                         versionSpec = `"${versionSpec}"`;
                     }
-                    return `${pkg}@${versionSpec}`;
-                }));
+                    instructions.push(`${pkg}@${versionSpec}`);
+                });
             }
         }
         
@@ -49,4 +50,4 @@ class Conditions {
     }
 }
 
-export default Conditions;
+module.exports = { Conditions };

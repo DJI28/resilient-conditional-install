@@ -3,6 +3,7 @@
  * conditional-install.js - wrapper around the conditional install package
  *
  * Copyright © 2023 JEDLSoft
+ * Modified by Diogo Domingues, 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +22,18 @@
 var fs = require("fs");
 var semver = require("semver");
 
-// local require and import are for testing inside of the project whereas
+// local requires are for testing inside of the project whereas
 // the "else" conditions are for when this script ends up in the .bin dir
 if (semver.lte(process.versions.node, "14.0.0")) {
     if (fs.existsSync("./lib/index.js")) {
         require("./lib/index.js");
     } else {
-        require("../conditional-install/lib/index.js");
+        require("../resilient-conditional-install/lib/index.js");
     }
 } else {
     if (fs.existsSync("./src/index.js")) {
-        import("./src/index.js");
+        require("./src/index.js");
     } else {
-        import("../conditional-install/src/index.js");
+        require("../resilient-conditional-install/src/index.js");
     }
 }
