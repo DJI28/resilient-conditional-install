@@ -1,15 +1,24 @@
 # conditional-install (resilient fork)
 
-> ⚠️ **Unofficial fork** - not maintained by the original authors 
-This is an unofficial fork of the original [conditional-install](https://github.com/ilib-js/conditionalInstall)
+> ⚠️ **Unofficial fork** - not maintained by the original authors.
+Original project (conditional-install):
+- [GitHub](https://github.com/ilib-js/conditionalInstall)
+- [npm](https://www.npmjs.com/package/conditional-install)
 
-> ⚠️ This fork aims to be drop-in compatible but changes runtime behavior (no longer throws on missing compatibility data)
+> ⚠️ This fork aims to be drop-in compatible, but intentionally changes runtime behavior (it no longer throws when compatibility data is missing)
+
+### Behavior Differences from Upstream
+- Missing compatibility data no longer causes installation failure
+- Network/TLS errors are handled gracefully instead of causing repeated retries
+- Fallback Node versions are used when exact compatibility data is unavailable
 
 ### Improvements in this fork
-- Non-breaking NodeCompat (no crashes on missing compat data)
-- Fallback version probing for newer Node versions
-- Improved compatibility with older Node versions (Node 8+)
-- Reduced runtime dependencies by removing unnecessary polyfills
+- Improved compatibility with older Node versions (Node 6+)
+- Graceful handling of missing or unreachable compatibility data (no crashes)
+- Reduced runtime dependencies (removed unnecessary polyfills)
+- Better behavior on newer Node versions without compat data (fallback probing)
+- Detects TLS failures and avoids repeated retries (prevents noisy logs on older Node versions)
+- Added npm version check with `process.versions.npm`
 
 A utility to install npm packages based on certain conditions.
 
@@ -19,7 +28,7 @@ Why?
 The original motivation for this package is to install the proper version of
 the jest unit testing library.
 
-Some of the ilib packages supported node 8 through the
+Some of the ilib packages supported node 6 through the
 current latest version and used jest as their unit testing library. The only
 problem is that the latest version of jest did not run on node 10 through 13
 because it was rewritten with ES6 syntax in jest@27.0.0. The tests, which were
@@ -44,21 +53,45 @@ Here is what the package.json would look like:
 {
     "name": "mypackage",
     "scripts": {
-        "postinstall": "conditional-install"
+        "postinstall": "resilient-conditional-install"
     },
     "dependencies": {
-        "conditional-install": "^1.0.0"
+        "resilient-conditional-install": "^1.0.0"
     },
     "conditionalDependencies": {
-        "process.version >= 14.0.0": {
+        "process.versions.node >= 14.0.0": {
             "example-package": "^29.0.0"
         },
-        "process.version < 14.0.0": {
+        "process.versions.node < 14.0.0": {
             "example-package": "^26.0.0"
         }
     }
 }
 ```
+
+If you want to skip TLS validation (for example, when running on older Node versions that cannot validate modern HTTPS certificates), you can add the `--insecure` flag. As of May 2026, older Node versions (notably Node 6–7) may fail to validate modern TLS certificates:
+
+```json
+{
+    "name": "mypackage",
+    "scripts": {
+        "postinstall": "resilient-conditional-install --insecure"
+    },
+    "dependencies": {
+        "resilient-conditional-install": "^1.0.0"
+    },
+    "conditionalDependencies": {
+        "process.versions.node >= 14.0.0": {
+            "example-package": "^29.0.0"
+        },
+        "process.versions.node < 14.0.0": {
+            "example-package": "^26.0.0"
+        }
+    }
+}
+```
+
+> ⚠️ WARNING: Using the `--insecure` flag will skip TLS validation, which can expose you to security risks. Use this flag only if you understand the implications and have a specific reason to do so.
 
 The postinstall script is run automatically by `npm` or `yarn` after the
 regular installation is complete. If you are using `npm-ci`, it does not, so
@@ -75,6 +108,14 @@ dependencies.
 When the dependencies are installed, they are installed using the current
 package manner, but in such a way that the new dependencies are not saved
 to the package.json.
+
+Matching Behavior
+----------------------
+
+All conditions are evaluated independently.
+If multiple conditions evaluate to true, all matching dependencies will be installed.
+
+It is recommended to write mutually exclusive expressions to avoid installing multiple versions of the same package.
 
 Conditional Expressions
 ----------------------
@@ -102,7 +143,9 @@ be tested:
       so that they can represent JS features.
     - versions. Example: `process.versions.node` will return a full version spec,
       like "v14.4.2" or "18.0.0". This may or may not have the leading "v" in front
-      of it.
+      of it. Alternatively, `process.version` can also be used and returns the same Node
+      version string, though the `process.versions.node` is preferred for consistency
+      with other version checks. `process.versions.npm` is also available to check the npm version.
     - booleans. Example: `process.config.variables.icu_small` return true if this
       version of node uses the small ICU package, and false if this version has
       full ICU.
@@ -158,31 +201,35 @@ Example of a conditional expression using more complex syntax:
     }
 ```
 
+> Note: `process.versions.npm` is not a native Node property.
+> In this fork, it is derived from the npm user agent when available.
+> If npm is not detected, it defaults to "0.0.0".
+
 Conditional Dev Dependencies
 --------
 
-If you put "conditional-install" into the postinstall script, both npm and yarn will run the
+If you put "resilient-conditional-install" into the postinstall script, both npm and yarn will run the
 conditional installation whether you are doing `npm install` locally in your cloned git repo, or
 including your package into another package from the npm repository.
 
 In some cases, you only want to do conditional installation when running locally during development.
-To do that, put "conditional-install" into the "prepare" script instead and include "conditional-install"
+To do that, put "resilient-conditional-install" into the "prepare" script instead and include "resilient-conditional-install"
 in your `devDependencies` instead:
 
 ```json
 {
     "name": "mypackage",
     "scripts": {
-        "prepare": "conditional-install"
+        "prepare": "resilient-conditional-install"
     },
     "devDependencies": {
-        "conditional-install": "^1.0.0"
+        "resilient-conditional-install": "^1.0.0"
     },
     "conditionalDependencies": {
-        "process.version >= 14.0.0": {
+        "process.versions.node >= 14.0.0": {
             "jest": "^29.0.0"
         },
-        "process.version < 14.0.0": {
+        "process.versions.node < 14.0.0": {
             "jest": "^26.0.0"
         }
     }
@@ -217,6 +264,11 @@ limitations under the License.
 
 ## Release Notes
 
+### v1.1.1
+- now working for node 6 and above
+- added --insecure flag to skip TLS validation (older node versions may have issues with TLS validation)
+- added npm version check with `process.versions.npm`
+
 ### v1.1.0
 
 - non-breaking NodeCompat (no crashes on missing compat data, just assumes that the feature is not supported)
@@ -248,3 +300,15 @@ Why:
 ### v1.0.0
 
 - Initial version
+
+## Even Older Node Versions
+
+Node versions older than 6 are not supported.
+
+This is mainly due to dependencies such as `expressionparser`, which require newer JavaScript features even in earlier versions of this package. Supporting older Node versions would likely require replacing or rewriting parts of the expression parsing logic.
+
+Additionally:
+- `semver` would likely need to be downgraded (e.g. to v6 or earlier)
+- `node-fetch` may also require a downgrade or replacement
+
+While it may be technically possible to add support for older Node versions, doing so would require non-trivial changes and is currently out of scope.

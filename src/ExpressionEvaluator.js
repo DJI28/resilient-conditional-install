@@ -76,6 +76,13 @@ function termDelegate(term) {
         return node;
     }
 
+    if (term === "process.versions.npm") {
+        const ua = process.env.npm_config_user_agent || '';
+        const match = ua.match(/npm\/([^\s]+)/);
+
+        return nodeValue(match ? match[1] : '0.0.0');
+    }
+
     if (term.startsWith("process.")) {
         const value = term.split(".").slice(1).reduce(
             (acc, part) => {

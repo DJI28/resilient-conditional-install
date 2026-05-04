@@ -48,6 +48,7 @@ const ECMAScriptAliases = {
 class NodeCompat {
     constructor() {
         this.init = false;
+        this.tlsWarningShown = false;
     }
 
     /**
@@ -62,9 +63,18 @@ class NodeCompat {
 
         let result = await this.fetchCompatJson(nodeVersion);
 
-        if (result) {
-            this.processVersionInfo(nodeVersion, result);
+        if (result.ok) {
+            console.log(`resilient-conditional-install: Loaded compatibility data for Node ${nodeVersion}.`);
+            this.processVersionInfo(nodeVersion, result.data);
             return true;
+        }
+
+        if (result.fatal) {
+            // If we get a fatal error (like a certificate error), then don't try any more fallbacks
+            console.warn(`resilient-conditional-install: Could not load compatibility data for Node ${nodeVersion}: ` +
+                `continuing without compatibility checks.`);
+            this.init = false;
+            return false;
         }
 
         // If not exact version then try fallback versions (Up to 20 versions back)
@@ -73,11 +83,16 @@ class NodeCompat {
         for (const candidateVersion of fallbackVersions) {
             result = await this.fetchCompatJson(candidateVersion);
 
-            if (result) {
+            if (result.ok) {
                 console.warn(`resilient-conditional-install: No compatibility data for Node ${nodeVersion}; ` +
                     `using Node ${candidateVersion} compatibility data instead.`);
-                this.processVersionInfo(candidateVersion, result);
+                this.processVersionInfo(candidateVersion, result.data);
                 return true;
+            }
+
+            if (result.fatal) {
+                // If we get a fatal error (like a certificate error), then don't try any more fallbacks
+                break;
             }
         }
 
@@ -91,7 +106,7 @@ class NodeCompat {
      * Fetch compatibility JSON data for a specific Node version.
      *
      * @param {string} version Node version
-     * @returns {Promise<Object||null>} Parsed JSON data or null if unavailable
+     * @returns {Promise<{ok: boolean, data: Object|null, fatal: boolean}>} Parsed JSON data or null if unavailable
      */
     async fetchCompatJson(version) {
         const url = `${COMPAT_BASE_URL}${version}.json`;
@@ -100,19 +115,24 @@ class NodeCompat {
             const response = await fetch(url);
 
             if (!response.ok) {
-                return null;
+                return {ok: false, data: null, fatal: false};
             }
 
             const text = await response.text();
             try {
-                return JSON.parse(text);
+                return {ok: true, data: JSON.parse(text), fatal: false};
             } catch (err) {
                 console.warn(`resilient-conditional-install: Failed to parse compatibility data for Node ${version}: ${err}`);
-                return null;
+                return {ok: false, data: null, fatal: false};
             }
         } catch (err) {
+            if (this.isCertificateError(err)) {
+                this.warnTlsOnce(`fetching compatibility data for Node ${version}`);
+                return {ok: false, data: null, fatal: true};
+            }
+
             console.warn(`resilient-conditional-install: Failed to fetch compatibility data for Node ${version}: ${err}`);
-            return null;
+            return {ok: false, data: null, fatal: false};
         }
     }
 
@@ -141,6 +161,11 @@ class NodeCompat {
 
             return fallbackVersions;
         } catch (err) {
+            if (this.isCertificateError(err)) {
+                this.warnTlsOnce("fetching Node release index");
+                return [];
+            }
+
             console.warn(`resilient-conditional-install: Failed to fetch Node release index: ${err}`);
             return [];
         }
@@ -274,6 +299,30 @@ class NodeCompat {
             return false;
         }
         return this.esVersions[version] === true;
+    }
+
+    /**
+     * Check if an error is a certificate error that may indicate a network issue or misconfiguration.
+     * @param {*} err  Error object or message
+     * @returns  {boolean}
+     */
+    isCertificateError(err) {
+        const msg = String(err && (err.code || err.message || err));
+
+        return (msg.includes('UNABLE_TO_GET_ISSUER_CERT_LOCALLY') || msg.includes('SELF_SIGNED_CERT_IN_CHAIN') || 
+            msg.includes('CERT_HAS_EXPIRED') || msg.includes('unable to get local issuer certificate'));
+    }
+
+    /**
+     * Warn about TLS certificate issues, but only show the warning once per context to avoid spamming the user.
+     * @param {string} context  Context of the TLS error (e.g. "fetching compatibility data for Node 14.17.0")
+     */
+    warnTlsOnce(context) {
+        if (!this.tlsWarningShown) {
+            console.warn(`resilient-conditional-install: TLS certificate validation failed while ${context}. ` +
+                `This may be cause by an old Node version. Use --insecure to bypass TLS validation, or upgrade Node.`);
+            this.tlsWarningShown = true;
+        }
     }
 }
 

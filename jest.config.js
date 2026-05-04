@@ -18,7 +18,7 @@ if (semver.lte(process.versions.node, 'v16.0.0')) {
             presets: [[
                 '@babel/preset-env', {
                     "targets": {
-                        "node": "8",
+                        "node": "6",
                     },
                 }
             ]],

@@ -43,7 +43,7 @@ module.exports = function(grunt) {
                     '@babel/preset-env',
                     {
                         targets: {
-                            node: "8",
+                            node: "6",
                         },
                     }
                 ]],

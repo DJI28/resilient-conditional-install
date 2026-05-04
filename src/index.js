@@ -60,6 +60,12 @@ if (process.argv.length > 2 && process.argv[2].toLowerCase() === "--help") {
     process.exit(0);
 }
 
+const insecure = process.argv.length > 2 && process.argv[2].toLowerCase() === "--insecure";
+if (insecure) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    console.warn("resilient-conditional-install: WARNING: TLS certificate validation is disabled");
+}
+
 try {
     const pkg = findPkgJson();
 
@@ -81,6 +87,10 @@ try {
                 console.log(command);
                 execSync(command);
             }
+        })
+        .catch(err => {
+            console.error(`resilient-conditional-install: failed: ${err}`);
+            process.exit(1);
         });
 } catch (e) {
     console.error("resilient-conditional-install failed: " + e);
