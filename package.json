@@ -67,7 +67,7 @@
         "test:install": "node resilient-conditional-install.js",
         "debug": "npm run build:dev ; node --experimental-vm-modules --inspect-brk node_modules/.bin/jest -i",
         "clean": "git clean -f -d src test; rm -rf lib",
-        "doc": "mkdir -p docs ; jsdoc2md -c jsdoc.json --separators --source src/* -m table > docs/conditionalInstall.md",
+        "doc": "mkdir -p docs ; jsdoc2md -c jsdoc.json --separators --source src/* -m table > docs/resilient-conditional-install.md",
         "doc:html": "jsdoc -c jsdoc.json",
         "prepare": "npm-run-all build:dev test:install"
     },
