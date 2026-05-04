@@ -39,9 +39,7 @@
         }
     ],
     "files": [
-        "src",
         "lib",
-        "docs",
         "resilient-conditional-install.js",
         "README.md",
         "LICENSE"

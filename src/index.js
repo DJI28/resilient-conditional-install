@@ -85,7 +85,7 @@ try {
             if (packages.length) {
                 const command = `npm install --no-save --ignore-scripts ${packages}`;
                 console.log(command);
-                execSync(command);
+                execSync(command, { stdio: 'inherit' });
             }
         })
         .catch(err => {

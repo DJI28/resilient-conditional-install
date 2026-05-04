@@ -19,21 +19,4 @@
  * limitations under the License.
  */
 
-var fs = require("fs");
-var semver = require("semver");
-
-// local requires are for testing inside of the project whereas
-// the "else" conditions are for when this script ends up in the .bin dir
-if (semver.lte(process.versions.node, "14.0.0")) {
-    if (fs.existsSync("./lib/index.js")) {
-        require("./lib/index.js");
-    } else {
-        require("../resilient-conditional-install/lib/index.js");
-    }
-} else {
-    if (fs.existsSync("./src/index.js")) {
-        require("./src/index.js");
-    } else {
-        require("../resilient-conditional-install/src/index.js");
-    }
-}
+require('./lib/index.js');
